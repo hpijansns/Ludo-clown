@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Ludo Master Pro - Admin Central Console</title>
+  
+  <!-- Firebase Compat Libraries -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+  <style>
+    :root {
+      --bg-dark: #070a13;
+      --panel-card: #111827;
+      --card-border: #1f293d;
+      --tab-active: #2563eb;
+      --gold: #fbbf24;
+      --red: #ef4444;
+      --green: #22c55e;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background: var(--bg-dark);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .shell {
+      width: 100%;
+      max-width: 1100px;
+    }
+
+    /* Auth Gate */
+    .login-container {
+      max-width: 380px;
+      margin: 90px auto;
+      background: var(--panel-card);
+      border: 1.5px solid var(--card-border);
+      border-radius: 18px;
+      padding: 28px;
+      text-align: center;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.7);
+    }
+
+    .title-gradient {
+      background: linear-gradient(135deg, var(--gold), var(--red));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-size: 1.8rem;
+      font-weight: 900;
+      margin-bottom: 6px;
+    }
+
+    .input-field {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid var(--card-border);
+      padding: 12px 14px;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 0.95rem;
+      margin-bottom: 12px;
+      outline: none;
+    }
+    .input-field:focus { border-color: var(--tab-active); }
+
+    .btn {
+      background: var(--tab-active);
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-weight: 800;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+    .btn:active { transform: scale(0.96); }
+    .btn-danger { background: var(--red); }
+    .btn-green { background: var(--green); }
+    .btn-gold { background: #d97706; }
+
+    /* Top Console Header */
+    .top-header {
+      background: var(--panel-card);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    /* Tab Switcher */
+    .admin-nav {
+      display: flex;
+      gap: 8px;
+      background: #0f172a;
+      padding: 6px;
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+      margin-bottom: 20px;
+      overflow-x: auto;
+    }
+
+    .nav-btn {
+      flex: 1;
+      min-width: 150px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 12px 16px;
+      font-weight: 800;
+      font-size: 0.9rem;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .nav-btn.active {
+      background: var(--tab-active);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+    }
+
+    /* Section Panels */
+    .section-panel {
+      display: none;
+      background: var(--panel-card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .section-panel.active { display: block; }
+
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 900;
+      color: var(--gold);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 18px;
+    }
+
+    /* Metrics Grid */
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    .stat-box {
+      background: #0b1120;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .stat-num {
+      font-size: 2.1rem;
+      font-weight: 900;
+      color: var(--gold);
+      margin-top: 6px;
+    }
+
+    /* Tables */
+    .table-container {
+      overflow-x: auto;
+      margin-top: 10px;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--card-border);
+      font-size: 0.9rem;
+    }
+
+    th {
+      background: #0b1120;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 800;
+    }
+    .badge-waiting { background: rgba(251, 191, 36, 0.2); color: var(--gold); }
+    .badge-playing { background: rgba(34, 197, 94, 0.2); color: var(--green); }
+
+    .room-card {
+      background: #0b1120;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="shell">
+    <!-- 1. LOGIN GATE -->
+    <div id="view-login" class="login-container">
+      <div class="title-gradient">ADMIN CONSOLE</div>
+      <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:20px;">Ludo Pro Multiplayer Management</p>
+
+      <form onsubmit="handleAdminLogin(event)">
+        <input type="text" id="admin-user" class="input-field" placeholder="Admin Username" required autocomplete="username">
+        <input type="password" id="admin-pass" class="input-field" placeholder="Admin Password" required autocomplete="current-password">
+        <button type="submit" class="btn" style="width:100%; padding:12px; font-size:1rem; margin-top:6px;">LOG IN</button>
+      </form>
+    </div>
+
+    <!-- 2. MAIN ADMIN PORTAL -->
+    <div id="view-portal" style="display:none;">
+      
+      <!-- Top Header -->
+      <div class="top-header">
+        <div>
+          <h2 class="title-gradient" style="font-size:1.4rem;">LUDO PRO ADMIN</h2>
+          <span style="color:var(--text-muted); font-size:0.8rem;">Database: ludo-739f9-default-rtdb</span>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-gold" onclick="refreshStreams()">🔄 Sync</button>
+          <button class="btn btn-danger" onclick="adminLogout()">🚪 Exit</button>
+        </div>
+      </div>
+
+      <!-- Clean Tab Switcher -->
+      <div class="admin-nav">
+        <button class="nav-btn active" onclick="switchSection('sec-overview')">📊 Overview</button>
+        <button class="nav-btn" onclick="switchSection('sec-rooms')">🎮 Live Rooms (<span id="tab-room-count">0</span>)</button>
+        <button class="nav-btn" onclick="switchSection('sec-players')">👥 Player Directory</button>
+        <button class="nav-btn" onclick="switchSection('sec-economy')">💰 Coin Economy</button>
+        <button class="nav-btn" onclick="switchSection('sec-broadcast')">📢 Broadcast Alert</button>
+      </div>
+
+      <!-- SECTION 1: OVERVIEW -->
+      <div id="sec-overview" class="section-panel active">
+        <div class="section-title">📊 Platform Snapshot</div>
+        <div class="section-desc">Real-time statistics of current matches, users and coin supply.</div>
+
+        <div class="stat-row">
+          <div class="stat-box">
+            <div style="color:var(--text-muted); font-size:0.82rem; font-weight:800;">ACTIVE LIVE ROOMS</div>
+            <div class="stat-num" id="stat-rooms">0</div>
+          </div>
+          <div class="stat-box">
+            <div style="color:var(--text-muted); font-size:0.82rem; font-weight:800;">TOTAL REGISTERED USERS</div>
+            <div class="stat-num" id="stat-users">0</div>
+          </div>
+          <div class="stat-box">
+            <div style="color:var(--text-muted); font-size:0.82rem; font-weight:800;">TOTAL VIRTUAL COINS CIRCULATING</div>
+            <div class="stat-num" id="stat-coins">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 2: LIVE ROOMS -->
+      <div id="sec-rooms" class="section-panel">
+        <div class="section-title">🎮 Active Match Rooms</div>
+        <div class="section-desc">View currently open matchmaking rooms and terminate stalled/dead games.</div>
+
+        <div id="rooms-list-container">
+          <div style="color:var(--text-muted); font-size:0.9rem;">Checking active matches...</div>
+        </div>
+      </div>
+
+      <!-- SECTION 3: PLAYER DIRECTORY -->
+      <div id="sec-players" class="section-panel">
+        <div class="section-title">👥 Registered Players Directory</div>
+        <div class="section-desc">Complete user profiles, registration details, wins and account actions.</div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Matches Won</th>
+                <th>Registered Date</th>
+                <th>Account Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="player-directory-rows">
+              <tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Loading players...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SECTION 4: COIN ECONOMY -->
+      <div id="sec-economy" class="section-panel">
+        <div class="section-title">💰 Virtual Coin Balances & Economy</div>
+        <div class="section-desc">Manage player coin balances directly. Add, subtract, or set exact coins.</div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Current Balance</th>
+                <th>Quick Add / Deduct</th>
+                <th>Set Exact Coins</th>
+              </tr>
+            </thead>
+            <tbody id="economy-table-rows">
+              <tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Loading balances...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SECTION 5: BROADCAST ALERT -->
+      <div id="sec-broadcast" class="section-panel">
+        <div class="section-title">📢 Send Global Notice / Alert</div>
+        <div class="section-desc">Publish a message banner to all online players in real-time.</div>
+
+        <div style="max-width:550px;">
+          <input type="text" id="broadcast-input" class="input-field" placeholder="Enter message (e.g., Server Maintenance in 10 mins!)">
+          <button class="btn btn-gold" style="padding:10px 18px;" onclick="sendGlobalAlert()">Publish Message</button>
+          <button class="btn btn-danger" style="padding:10px 18px; margin-left:6px;" onclick="clearGlobalAlert()">Clear Alert</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDnfIFlNgFAaY5k4DcpeanXnTYan_VaTg0",
+      authDomain: "ludo-739f9.firebaseapp.com",
+      databaseURL: "https://ludo-739f9-default-rtdb.firebaseio.com",
+      projectId: "ludo-739f9",
+      storageBucket: "ludo-739f9.firebasestorage.app",
+      messagingSenderId: "256500867340",
+      appId: "1:256500867340:web:f31ce7983d4236f8df2929"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Session Restore
+    window.addEventListener('DOMContentLoaded', () => {
+      if (sessionStorage.getItem('ludo_admin_auth') === 'true') {
+        mountPortal();
+      }
+    });
+
+    // Verification
+    function handleAdminLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById('admin-user').value.trim();
+      const p = document.getElementById('admin-pass').value.trim();
+
+      if (u === 'mohit9' && p === 'pooja 2005') {
+        sessionStorage.setItem('ludo_admin_auth', 'true');
+        mountPortal();
+      } else {
+        alert('Galat Credentials! Sahi username aur password dalein.');
+      }
+    }
+
+    function adminLogout() {
+      sessionStorage.removeItem('ludo_admin_auth');
+      document.getElementById('view-portal').style.display = 'none';
+      document.getElementById('view-login').style.display = 'block';
+    }
+
+    function mountPortal() {
+      document.getElementById('view-login').style.display = 'none';
+      document.getElementById('view-portal').style.display = 'block';
+      bindStreams();
+    }
+
+    // Tab Switcher
+    function switchSection(secId) {
+      document.querySelectorAll('.section-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+      document.getElementById(secId).classList.add('active');
+      event.currentTarget.classList.add('active');
+    }
+
+    function bindStreams() {
+      // 1. Live Rooms Stream
+      db.ref('rooms').on('value', (snap) => {
+        const rooms = snap.val();
+        const container = document.getElementById('rooms-list-container');
+        container.innerHTML = '';
+
+        if (!rooms) {
+          container.innerHTML = '<div style="color:var(--text-muted); font-size:0.9rem;">Filhal koi match running nahi hai.</div>';
+          document.getElementById('stat-rooms').innerText = '0';
+          document.getElementById('tab-room-count').innerText = '0';
+          return;
+        }
+
+        const roomKeys = Object.keys(rooms);
+        document.getElementById('stat-rooms').innerText = roomKeys.length;
+        document.getElementById('tab-room-count').innerText = roomKeys.length;
+
+        roomKeys.forEach(code => {
+          const r = rooms[code];
+          const div = document.createElement('div');
+          div.className = 'room-card';
+          div.innerHTML = `
+            <div>
+              <strong style="color:var(--gold); font-size:1.05rem;">Room #${code}</strong>
+              <div style="font-size:0.85rem; color:var(--text-muted); margin-top:3px;">
+                Host: <strong style="color:#fff;">${r.host || 'N/A'}</strong> (Red) | 
+                Guest: <strong style="color:#fff;">${r.guest || 'Waiting...'}</strong> (Yellow)
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span class="status-badge ${r.status === 'PLAYING' ? 'badge-playing' : 'badge-waiting'}">${r.status || 'ACTIVE'}</span>
+              <button class="btn btn-danger" onclick="killRoom('${code}')">Terminate Room</button>
+            </div>
+          `;
+          container.appendChild(div);
+        });
+      });
+
+      // 2. Users & Economy Stream
+      db.ref('users').on('value', (snap) => {
+        const users = snap.val();
+        const pTable = document.getElementById('player-directory-rows');
+        const eTable = document.getElementById('economy-table-rows');
+
+        pTable.innerHTML = '';
+        eTable.innerHTML = '';
+
+        if (!users) {
+          pTable.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">No users found.</td></tr>';
+          eTable.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">No users found.</td></tr>';
+          document.getElementById('stat-users').innerText = '0';
+          document.getElementById('stat-coins').innerText = '0';
+          return;
+        }
+
+        const userKeys = Object.keys(users);
+        document.getElementById('stat-users').innerText = userKeys.length;
+
+        let totalCoins = 0;
+        userKeys.forEach(userKey => {
+          const u = users[userKey];
+          const coins = u.coins || 0;
+          totalCoins += coins;
+          const regDate = u.registeredAt ? new Date(u.registeredAt).toLocaleDateString() : 'N/A';
+          const displayName = u.username || userKey;
+
+          // Populate Player Directory Tab
+          const pRow = document.createElement('tr');
+          pRow.innerHTML = `
+            <td><strong>${displayName}</strong></td>
+            <td>${u.wins || 0} Wins</td>
+            <td style="color:var(--text-muted);">${regDate}</td>
+            <td><span class="status-badge badge-playing">Active</span></td>
+            <td>
+              <button class="btn btn-danger" style="padding:4px 10px; font-size:0.75rem;" onclick="removePlayer('${userKey}', '${displayName}')">Delete Account</button>
+            </td>
+          `;
+          pTable.appendChild(pRow);
+
+          // Populate Coin Economy Tab
+          const eRow = document.createElement('tr');
+          eRow.innerHTML = `
+            <td><strong>${displayName}</strong></td>
+            <td style="color:var(--gold); font-weight:900;">🟡 ${coins.toLocaleString()}</td>
+            <td>
+              <button class="btn btn-green" style="padding:4px 10px; font-size:0.78rem;" onclick="adjustCoins('${userKey}', 500)">+500</button>
+              <button class="btn btn-danger" style="padding:4px 10px; font-size:0.78rem; margin-left:4px;" onclick="adjustCoins('${userKey}', -500)">-500</button>
+            </td>
+            <td>
+              <button class="btn btn-gold" style="padding:4px 10px; font-size:0.78rem;" onclick="setCustomCoins('${userKey}', '${displayName}')">Set Exact</button>
+            </td>
+          `;
+          eTable.appendChild(eRow);
+        });
+
+        document.getElementById('stat-coins').innerText = totalCoins.toLocaleString();
+      });
+    }
+
+    function killRoom(code) {
+      if (confirm(`Kya aap Room #${code} ko band karna chahte hain?`)) {
+        db.ref('rooms/' + code).remove();
+      }
+    }
+
+    function adjustCoins(userKey, amount) {
+      db.ref('users/' + userKey + '/coins').transaction((cur) => {
+        return Math.max(0, (cur || 0) + amount);
+      });
+    }
+
+    function setCustomCoins(userKey, displayName) {
+      const val = prompt(`Player "${displayName}" ke liye naya virtual coin balance dalein:`, "1000");
+      if (val !== null && !isNaN(val)) {
+        db.ref('users/' + userKey).update({ coins: parseInt(val, 10) });
+      }
+    }
+
+    function removePlayer(userKey, displayName) {
+      if (confirm(`Warning: Kya aap player "${displayName}" ka poora account delete karna chahte hain?`)) {
+        db.ref('users/' + userKey).remove();
+      }
+    }
+
+    function sendGlobalAlert() {
+      const text = document.getElementById('broadcast-input').value.trim();
+      if (!text) { alert('Pehle message type karein!'); return; }
+      db.ref('system_notice').set({
+        message: text,
+        time: Date.now()
+      }).then(() => alert('Broadcast Alert send ho gaya!'));
+    }
+
+    function clearGlobalAlert() {
+      db.ref('system_notice').remove().then(() => alert('Notice clear ho gaya!'));
+    }
+
+    function refreshStreams() {
+      bindStreams();
+    }
+  </script>
+</body>
+</html>
